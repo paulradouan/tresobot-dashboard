@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrésoBot Pro - Dashboard IA</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .logo h1 {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(30, 60, 114, 0.3);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .hero-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 32px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .hero-title {
+            font-size: 36px;
+            color: #1e3c72;
+            margin-bottom: 16px;
+        }
+        
+        .hero-subtitle {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 32px;
+        }
+        
+        .kpis-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .kpi-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .kpi-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .kpi-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .kpi-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1e3c72;
+            margin-bottom: 8px;
+        }
+        
+        .kpi-label {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .kpi-change {
+            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+            display: inline-block;
+        }
+        
+        .positive { background: #d4edda; color: #155724; }
+        .negative { background: #f8d7da; color: #721c24; }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin: 40px 0;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+        
+        .alerts-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin: 32px 0;
+        }
+        
+        .alert-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            margin: 20px 0;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1e3c72;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            margin-top: 40px;
+            border-radius: 16px;
+        }
+        
+        .footer p {
+            color: white;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <h1>🤖 TrésoBot Pro</h1>
+            </div>
+            <button class="refresh-btn" onclick="refreshData()">
+                <span>🔄</span> Actualiser
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="loading" id="loadingIndicator">
+            <div class="spinner"></div>
+            <h3>Synchronisation en cours...</h3>
+            <p>Récupération des données de trésorerie</p>
+        </div>
+
+        <!-- Section Hero -->
+        <div class="hero-section">
+            <h1 class="hero-title">Dashboard Intelligent de Trésorerie</h1>
+            <p class="hero-subtitle">Analyse en temps réel avec Intelligence Artificielle</p>
+            
+            <!-- KPIs Principaux -->
+            <div class="kpis-overview">
+                <div class="kpi-card">
+                    <div class="kpi-icon">💰</div>
+                    <div class="kpi-value" id="soldeActuel">€ 27,246.75</div>
+                    <div class="kpi-label">Solde Actuel</div>
+                    <div class="kpi-change positive">+2.3% ce mois</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">❤️</div>
+                    <div class="kpi-value" id="scoreSante">84/100</div>
+                    <div class="kpi-label">Score de Santé</div>
+                    <div class="kpi-change positive">Excellent</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">📈</div>
+                    <div class="kpi-value" id="fluxNet">€ +1,250</div>
+                    <div class="kpi-label">Flux Net</div>
+                    <div class="kpi-change positive">+15%</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">🔮</div>
+                    <div class="kpi-value" id="prevision30j">€ 28,890</div>
+                    <div class="kpi-label">Prévision 30j</div>
+                    <div class="kpi-change positive">+6%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Graphiques -->
+        <div class="dashboard-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span>📊</span>
+                        Évolution du Solde
+                    </h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="soldeChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span>🏷️</span>
+                        Répartition par Catégorie
+                    </h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="categoriesChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span>💸</span>
+                        Flux Mensuel
+                    </h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="fluxChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span>🔮</span>
+                        Prévisions IA
+                    </h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="previsionsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alertes -->
+        <div class="alerts-section">
+            <h2>🚨 Alertes et Insights IA</h2>
+            <div class="alert-card">
+                <h4>✅ Situation Financière Stable</h4>
+                <p>Votre trésorerie présente une excellente santé avec un score de 84/100. Les flux sont réguliers et les prévisions positives.</p>
+            </div>
+            <div class="alert-card">
+                <h4>📈 Recommandation IA</h4>
+                <p>L'analyse détecte un surplus de liquidités. Considérez un placement court terme pour optimiser vos rendements.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© 2025 TrésoBot Pro - Dashboard Intelligence Artificielle</p>
+        <p style="margin-top: 8px;">🔒 Sécurisé • 🚀 Temps Réel • 🤖 IA Avancée</p>
+    </footer>
+
+    <script>
+        // Configuration API
+        const API_CONFIG = {
+            baseUrl: 'https://votre-n8n-instance.app.n8n.cloud',
+            webhookPath: '/webhook/tresorerie-update',
+            refreshInterval: 300000
+        };
+
+        // Variables des graphiques
+        let soldeChart, categoriesChart, fluxChart, previsionsChart;
+
+        // Données de démonstration
+        const demoData = {
+            solde_actuel: 27246.75,
+            flux_net: 1250.00,
+            score_sante: 84,
+            prevision_30j: 28890.50,
+            categories: {
+                'TRANSFERT': 35.2,
+                'VIREMENT_RECU': 17.3,
+                'CHARGES_SOCIALES': 9.6,
+                'CARTE_BANCAIRE': 5.1,
+                'AUTRES': 32.8
+            }
+        };
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            updateDashboard(demoData);
+        });
+
+        // Initialisation des graphiques
+        function initializeCharts() {
+            // Graphique évolution du solde
+            const soldeCtx = document.getElementById('soldeChart').getContext('2d');
+            soldeChart = new Chart(soldeCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil'],
+                    datasets: [{
+                        label: 'Solde',
+                        data: [24000, 24500, 25200, 26100, 26800, 27000, 27246.75],
+                        borderColor: '#1e3c72',
+                        backgroundColor: 'rgba(30, 60, 114, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Graphique catégories
+            const catCtx = document.getElementById('categoriesChart').getContext('2d');
+            categoriesChart = new Chart(catCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Transferts', 'Virements', 'Charges', 'Cartes', 'Autres'],
+                    datasets: [{
+                        data: [35.2, 17.3, 9.6, 5.1, 32.8],
+                        backgroundColor: ['#1e3c72', '#2a5298', '#3d6bb3', '#5a84ce', '#7aa3d9']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Graphique flux
+            const fluxCtx = document.getElementById('fluxChart').getContext('2d');
+            fluxChart = new Chart(fluxCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Crédits', 'Débits', 'Net'],
+                    datasets: [{
+                        data: [5680, -4430, 1250],
+                        backgroundColor: ['#27ae60', '#e74c3c', '#1e3c72']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Graphique prévisions
+            const prevCtx = document.getElementById('previsionsChart').getContext('2d');
+            previsionsChart = new Chart(prevCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Aujourd\'hui', '7j', '14j', '21j', '30j'],
+                    datasets: [{
+                        label: 'Prévision',
+                        data: [27246.75, 27890, 28200, 28550, 28890],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // Mise à jour du dashboard
+        function updateDashboard(data) {
+            document.getElementById('soldeActuel').textContent = 
+                '€ ' + data.solde_actuel.toLocaleString('fr-FR', {minimumFractionDigits: 2});
+            
+            document.getElementById('scoreSante').textContent = data.score_sante + '/100';
+            
+            document.getElementById('fluxNet').textContent = 
+                '€ ' + (data.flux_net >= 0 ? '+' : '') + data.flux_net.toLocaleString('fr-FR');
+            
+            document.getElementById('prevision30j').textContent = 
+                '€ ' + data.prevision_30j.toLocaleString('fr-FR', {minimumFractionDigits: 2});
+        }
+
+        // Actualisation des données
+        function refreshData() {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            loadingIndicator.style.display = 'block';
+
+            // Simulation d'appel API
+            setTimeout(() => {
+                console.log('Données actualisées');
+                loadingIndicator.style.display = 'none';
+                
+                // Simulation de nouvelles données
+                const newData = { ...demoData };
+                newData.solde_actuel += (Math.random() - 0.5) * 1000;
+                updateDashboard(newData);
+            }, 2000);
+        }
+
+        // Auto-refresh
+        setInterval(() => {
+            console.log('Auto-refresh en arrière-plan');
+        }, API_CONFIG.refreshInterval);
+    </script>
+</body>
+</html>
