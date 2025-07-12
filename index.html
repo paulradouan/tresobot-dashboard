@@ -483,22 +483,42 @@
                 '€ ' + data.prevision_30j.toLocaleString('fr-FR', {minimumFractionDigits: 2});
         }
 
-        // Actualisation des données
-        function refreshData() {
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            loadingIndicator.style.display = 'block';
+       // Actualisation des données
+function refreshData() {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    loadingIndicator.style.display = 'block';
 
-            // Simulation d'appel API
-            setTimeout(() => {
-                console.log('Données actualisées');
-                loadingIndicator.style.display = 'none';
-                
-                // Simulation de nouvelles données
-                const newData = { ...demoData };
-                newData.solde_actuel += (Math.random() - 0.5) * 1000;
-                updateDashboard(newData);
-            }, 2000);
+    // Appel réel à votre API N8N
+    fetch(`${API_CONFIG.baseUrl}${API_CONFIG.webhookPath}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            action: 'get_dashboard_data',
+            timestamp: new Date().toISOString()
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.data) {
+            updateDashboard(data.data);
+        } else {
+            console.log('Pas de nouvelles données, utilisation des données de démo');
+            const newData = { ...demoData };
+            newData.solde_actuel += (Math.random() - 0.5) * 1000;
+            updateDashboard(newData);
         }
+        loadingIndicator.style.display = 'none';
+    })
+    .catch(error => {
+        console.error('Erreur API:', error);
+        const newData = { ...demoData };
+        newData.solde_actuel += (Math.random() - 0.5) * 1000;
+        updateDashboard(newData);
+        loadingIndicator.style.display = 'none';
+    });
+}
 
         // Auto-refresh
         setInterval(() => {
